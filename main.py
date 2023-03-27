@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-import requests
 
 url = "https://boiling-brook-69195.herokuapp.com/predict"
 
