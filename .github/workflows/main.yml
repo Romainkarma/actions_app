@@ -33,7 +33,7 @@ jobs:
    
    # Task for deploying to Heroku 
     - name: Deploy to Heroku 
-      env2:
+      env:
         HEROKU_AUTH_TOKEN_APP: ${{ secrets.HEROKU_AUTH_TOKEN_APP }}
         HEROKU_APP_NAME_APP: ${{ secrets.HEROKU_APP_NAME_APP }}
       if: github.ref == 'refs/heads/master' && job.status == 'success'
