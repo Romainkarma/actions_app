@@ -52,19 +52,6 @@ def app():
             st.success(f"Sur les graphiques ci dessous votre situation est représentée par le point rouge, si il est dans 0 le prêt peut " 
                        f"etre accepté, si c'est dans 1 il est refusé, avec une représentation par les 3 facteurs principaux qui ont fait "
                       f"défaut ou non par le passé")
-            #boxplot
-            fig = plt.figure(figsize=(10, 4))
-            sns.boxplot(x=col_train['TARGET'], y=col_train['DAYS_BIRTH'])
-            plt.scatter(x=reponse, y=days_birth, color='red', s=50, zorder=10)
-            st.pyplot(fig)
-            fig = plt.figure(figsize=(10, 4))
-            sns.boxplot(x=col_train['TARGET'], y=col_train['EXT_SOURCE_2'])
-            plt.scatter(x=reponse, y=ext2, color='red', s=50, zorder=10)
-            st.pyplot(fig)
-            fig = plt.figure(figsize=(10, 4))
-            sns.boxplot(x=col_train['TARGET'], y=col_train['EXT_SOURCE_3'])
-            plt.scatter(x=reponse, y=ext3, color='red', s=50, zorder=10)
-            st.pyplot(fig)
             # Use the SHAP values to create a force plot for a specific instance
             #instance_index = good_test.index[good_test['SK_ID_CURR'] == SK_ID_CURR].tolist()[0]
             instance_index = good_test[good_test['SK_ID_CURR'] == int(SK_ID_CURR)].index.tolist()
@@ -82,6 +69,20 @@ def app():
             st.write('This plot shows the features that contributed to the predicted outcome for a specific instance.')
             #st.pyplot(force_plot)
             st_shap(force_plot)
+            
+            #boxplot
+            fig = plt.figure(figsize=(10, 4))
+            sns.boxplot(x=col_train['TARGET'], y=col_train['DAYS_BIRTH'])
+            plt.scatter(x=reponse, y=days_birth, color='red', s=50, zorder=10)
+            st.pyplot(fig)
+            fig = plt.figure(figsize=(10, 4))
+            sns.boxplot(x=col_train['TARGET'], y=col_train['EXT_SOURCE_2'])
+            plt.scatter(x=reponse, y=ext2, color='red', s=50, zorder=10)
+            st.pyplot(fig)
+            fig = plt.figure(figsize=(10, 4))
+            sns.boxplot(x=col_train['TARGET'], y=col_train['EXT_SOURCE_3'])
+            plt.scatter(x=reponse, y=ext3, color='red', s=50, zorder=10)
+            st.pyplot(fig)
             
 
 if __name__ == "__main__":
