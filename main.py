@@ -9,10 +9,12 @@ import pickle
 import streamlit.components.v1 as components
 
 url = "https://boiling-brook-69195.herokuapp.com/predict"
-col_train = pd.read_pickle("app_train_col.pkl")
+#col_train = pd.read_pickle("app_train_col.pkl")
 shap_values_test = np.load('data.npy')
 good_test = pd.read_pickle("good_app_test-Copy1.pkl")
 good_test_sans_sk=good_test.drop(columns=["SK_ID_CURR"])
+col_train = pd.read_pickle("graph.pkl")
+col_test = pd.read_pickle("graph_test.pkl")
 
 with open('explainer.pkl', 'rb') as f:
     explainer = pickle.load(f)
@@ -29,7 +31,10 @@ def get_prediction(SK_ID_CURR):
         reponse = 1
     else:
         reponse = 0
-    return prediction, days_birth, reponse, ext2, ext3
+    days_birthk = col_test.loc[col_test['SK_ID_CURR'] == SK_ID_CURR, 'DAYS_BIRTH'].values[0]
+    ext2k = col_test.loc[col_test['SK_ID_CURR'] == SK_ID_CURR, 'EXT_SOURCE_2'].values[0]
+    ext3k = col_test.loc[col_test['SK_ID_CURR'] == SK_ID_CURR, 'EXT_SOURCE_3'].values[0]
+    return prediction, days_birth, reponse, ext2, ext3, days_birthk, ext2k, ext3k
 
 def st_shap(plot, height=None):
     shap_html = f"<head>{shap.getjs()}</head><body>{plot.html()}</body>"
@@ -37,21 +42,21 @@ def st_shap(plot, height=None):
 
 # Create a Streamlit app
 def app():
-    st.title("Loan Prediction App")
+    st.title("Application de classification prêt")
 
     # Add an input field for the user to enter SK_ID_CURR
-    SK_ID_CURR = st.text_input("Enter SK_ID_CURR")
+    SK_ID_CURR = st.text_input("Entrez le SK_ID_CURR")
 
     # Add a button to submit the form
     if st.button("Predict"):
         if SK_ID_CURR:
             # Call the get_prediction function to make a request to the API
-            prediction, days_birth, reponse, ext2, ext3= get_prediction(int(SK_ID_CURR))
+            prediction, days_birth, reponse, ext2, ext3, days_birthk, ext2k, ext3k= get_prediction(int(SK_ID_CURR))
             # Display the prediction and days_birth
-            st.success(f"La probabilité de faire defaut est de {prediction:.2%}")
-            st.success(f"Sur les graphiques ci dessous votre situation est représentée par le point rouge, si il est dans 0 le prêt peut " 
-                       f"etre accepté, si c'est dans 1 il est refusé, avec une représentation par les 3 facteurs principaux qui ont fait "
-                      f"défaut ou non par le passé")
+            st.write(f"La probabilité de faire defaut est de {prediction:.2%}")
+            st.write(f"Ci dessous s'affiche les facteurs propres à votre situation qui explique la prise de décision de l'entreprise " 
+                     f"sur le premier graphique les facteurs qui s'oppose en votre faveur ou défaveur et les trois graphiques suivant "
+                     f"vous situe par rapport aux clients ayant fait défaut ou non par le passé")
             # Use the SHAP values to create a force plot for a specific instance
             #instance_index = good_test.index[good_test['SK_ID_CURR'] == SK_ID_CURR].tolist()[0]
             instance_index = good_test[good_test['SK_ID_CURR'] == int(SK_ID_CURR)].index.tolist()
@@ -65,23 +70,32 @@ def app():
                 #force_plot = shap.plots._force.waterfall_legacy(explainer.expected_value[0], shap_values_test[instance_index], features=good_test_sans_sk.iloc[[instance_index]], feature_names=feature_names, show=False)
                 force_plot = shap.force_plot(explainer.expected_value[0], shap_values_test[instance_index], good_test_sans_sk.iloc[[instance_index]])
             # Display the force plot in your Streamlit app
-            st.write('## SHAP Force Plot')
-            st.write('This plot shows the features that contributed to the predicted outcome for a specific instance.')
+            #st.write('## SHAP Force Plot')
+            #st.write('This plot shows the features that contributed to the predicted outcome for a specific instance.')
             #st.pyplot(force_plot)
             st_shap(force_plot)
             
             #boxplot
             fig = plt.figure(figsize=(10, 4))
             sns.boxplot(x=col_train['TARGET'], y=col_train['DAYS_BIRTH'])
-            plt.scatter(x=reponse, y=days_birth, color='red', s=50, zorder=10)
+            plt.scatter(x=reponse, y=days_birthk, color='red', s=50, zorder=10)
+            plt.title("Votre age par rapport à l'ensemble")
+            plt.xlabel("Faire défaut")
+            plt.ylabel("Age(jours)")
             st.pyplot(fig)
             fig = plt.figure(figsize=(10, 4))
             sns.boxplot(x=col_train['TARGET'], y=col_train['EXT_SOURCE_2'])
-            plt.scatter(x=reponse, y=ext2, color='red', s=50, zorder=10)
+            plt.scatter(x=reponse, y=ext2k, color='red', s=50, zorder=10)
+            plt.title("Votre EXT_SOURCE_2 par rapport à l'ensemble")
+            plt.xlabel("Faire défaut")
+            plt.ylabel("EXT_SOURCE_2")
             st.pyplot(fig)
             fig = plt.figure(figsize=(10, 4))
             sns.boxplot(x=col_train['TARGET'], y=col_train['EXT_SOURCE_3'])
-            plt.scatter(x=reponse, y=ext3, color='red', s=50, zorder=10)
+            plt.scatter(x=reponse, y=ext3k, color='red', s=50, zorder=10)
+            plt.title("Votre EXT_SOURCE_3 par rapport à l'ensemble")
+            plt.xlabel("Faire défaut")
+            plt.ylabel("EXT_SOURCE_3")
             st.pyplot(fig)
             
 
