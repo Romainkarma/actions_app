@@ -9,6 +9,7 @@ import pickle
 import streamlit.components.v1 as components
 
 url = "https://boiling-brook-69195.herokuapp.com/predict"
+#col_train = pd.read_pickle("app_train_col.pkl")
 shap_values_test = np.load('data.npy')
 good_test = pd.read_pickle("good_app_test-Copy1.pkl")
 good_test_sans_sk=good_test.drop(columns=["SK_ID_CURR"])
@@ -23,9 +24,9 @@ def get_prediction(SK_ID_CURR):
     params = {'SK_ID_CURR': SK_ID_CURR}
     response = requests.get(url, params=params)
     prediction = response.json()['prediction']
-    #days_birth = response.json()['DAYS_BIRTH']
-    #ext2 = response.json()['EXT_SOURCE_2']
-    #ext3 = response.json()['EXT_SOURCE_3']
+    days_birth = response.json()['DAYS_BIRTH']
+    ext2 = response.json()['EXT_SOURCE_2']
+    ext3 = response.json()['EXT_SOURCE_3']
     if prediction > 0.2:
         reponse = 1
     else:
@@ -33,7 +34,7 @@ def get_prediction(SK_ID_CURR):
     days_birthk = col_test.loc[col_test['SK_ID_CURR'] == SK_ID_CURR, 'DAYS_BIRTH'].values[0]
     ext2k = col_test.loc[col_test['SK_ID_CURR'] == SK_ID_CURR, 'EXT_SOURCE_2'].values[0]
     ext3k = col_test.loc[col_test['SK_ID_CURR'] == SK_ID_CURR, 'EXT_SOURCE_3'].values[0]
-    return prediction, reponse, days_birthk, ext2k, ext3k
+    return prediction, days_birth, reponse, ext2, ext3, days_birthk, ext2k, ext3k
 
 def st_shap(plot, height=None):
     shap_html = f"<head>{shap.getjs()}</head><body>{plot.html()}</body>"
@@ -50,20 +51,28 @@ def app():
     if st.button("Predict"):
         if SK_ID_CURR:
             # Call the get_prediction function to make a request to the API
-            prediction, reponse, days_birthk, ext2k, ext3k= get_prediction(int(SK_ID_CURR))
+            prediction, days_birth, reponse, ext2, ext3, days_birthk, ext2k, ext3k= get_prediction(int(SK_ID_CURR))
             # Display the prediction and days_birth
             st.write(f"La probabilité de faire defaut est de {prediction:.2%}")
             st.write(f"Ci dessous s'affiche les facteurs propres à votre situation qui explique la prise de décision de l'entreprise " 
                      f"sur le premier graphique les facteurs qui s'oppose en votre faveur ou défaveur et les trois graphiques suivant "
                      f"vous situe par rapport aux clients ayant fait défaut ou non par le passé")
+            # Use the SHAP values to create a force plot for a specific instance
+            #instance_index = good_test.index[good_test['SK_ID_CURR'] == SK_ID_CURR].tolist()[0]
             instance_index = good_test[good_test['SK_ID_CURR'] == int(SK_ID_CURR)].index.tolist()
             if not instance_index:
                 print("Invalid INDEX")
             else:
                 instance_index = instance_index[0]
                 print("instance_index:", instance_index)
+                # Generate the SHAP force plot
                 feature_names = good_test_sans_sk.columns
+                #force_plot = shap.plots._force.waterfall_legacy(explainer.expected_value[0], shap_values_test[instance_index], features=good_test_sans_sk.iloc[[instance_index]], feature_names=feature_names, show=False)
                 force_plot = shap.force_plot(explainer.expected_value[0], shap_values_test[instance_index], good_test_sans_sk.iloc[[instance_index]])
+            # Display the force plot in your Streamlit app
+            #st.write('## SHAP Force Plot')
+            #st.write('This plot shows the features that contributed to the predicted outcome for a specific instance.')
+            #st.pyplot(force_plot)
             st_shap(force_plot)
             
             #boxplot
