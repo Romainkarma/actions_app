@@ -67,6 +67,7 @@ def app():
             st_shap(force_plot)
             
             #boxplot
+            #avec détails
             fig = plt.figure(figsize=(10, 4))
             sns.boxplot(x=col_train['TARGET'], y=col_train['DAYS_BIRTH'])
             plt.scatter(x=reponse, y=days_birthk, color='red', s=50, zorder=10)
