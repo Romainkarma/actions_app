@@ -23,9 +23,9 @@ def get_prediction(SK_ID_CURR):
     params = {'SK_ID_CURR': SK_ID_CURR}
     response = requests.get(url, params=params)
     prediction = response.json()['prediction']
-    #days_birth = response.json()['DAYS_BIRTH']
-    #ext2 = response.json()['EXT_SOURCE_2']
-    #ext3 = response.json()['EXT_SOURCE_3']
+    days_birth = response.json()['DAYS_BIRTH']
+    ext2 = response.json()['EXT_SOURCE_2']
+    ext3 = response.json()['EXT_SOURCE_3']
     if prediction > 0.2:
         reponse = 1
     else:
@@ -33,7 +33,7 @@ def get_prediction(SK_ID_CURR):
     days_birthk = col_test.loc[col_test['SK_ID_CURR'] == SK_ID_CURR, 'DAYS_BIRTH'].values[0]
     ext2k = col_test.loc[col_test['SK_ID_CURR'] == SK_ID_CURR, 'EXT_SOURCE_2'].values[0]
     ext3k = col_test.loc[col_test['SK_ID_CURR'] == SK_ID_CURR, 'EXT_SOURCE_3'].values[0]
-    return prediction, reponse, days_birthk, ext2k, ext3k
+    return prediction, days_birth,ext2 ,ext3, reponse, days_birthk, ext2k, ext3k
 
 def st_shap(plot, height=None):
     shap_html = f"<head>{shap.getjs()}</head><body>{plot.html()}</body>"
@@ -50,7 +50,7 @@ def app():
     if st.button("Predict"):
         if SK_ID_CURR:
             # Call the get_prediction function to make a request to the API
-            prediction, reponse, days_birthk, ext2k, ext3k= get_prediction(int(SK_ID_CURR))
+            prediction, days_birth,ext2 ,ext3, reponse, days_birthk, ext2k, ext3k= get_prediction(int(SK_ID_CURR))
             # Display the prediction and days_birth
             st.write(f"La probabilité de faire defaut est de {prediction:.2%}")
             st.write(f"Ci dessous s'affiche les facteurs propres à votre situation qui explique la prise de décision de l'entreprise " 
